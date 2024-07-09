@@ -23,6 +23,21 @@
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+        }
+        .game-info > div {
+            width: 48%;
+        }
+        .team-pair {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .team-input {
+            width: 48%;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -41,16 +56,18 @@
             <div id="teams" class="mb-4"></div>
             <button id="revealButton" class="btn btn-success mb-3" onclick="revealAnswers()">Reveal Answers</button>
             <button id="nextRoundButton" class="btn btn-primary mb-3" onclick="nextRound()" style="display:none;">Next Round</button>
-            <div id="scoreboard" class="card p-3 mb-4"></div>
-            <div class="card p-3">
-                <h5>Game Rules:</h5>
-                <ul>
-                    <li>0 = Orange Ball</li>
-                    <li>1 = Green Ball</li>
-                    <li>Green vs Green: Both teams get 5 points</li>
-                    <li>Green vs Orange: Green gets 10 points, Orange loses 10 points</li>
-                    <li>Orange vs Orange: Both teams lose 5 points</li>
-                </ul>
+            <div class="game-info">
+                <div id="scoreboard" class="card p-3 mb-4"></div>
+                <div class="card p-3">
+                    <h5>Game Rules:</h5>
+                    <ul>
+                        <li>0 = Orange Ball</li>
+                        <li>1 = Green Ball</li>
+                        <li>Green vs Green: Both teams get 5 points</li>
+                        <li>Green vs Orange: Green gets 10 points, Orange loses 10 points</li>
+                        <li>Orange vs Orange: Both teams lose 5 points</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -74,18 +91,25 @@
 
         function renderTeams() {
             const teamsDiv = document.getElementById('teams');
-            teamsDiv.innerHTML = `
-                <div class="card mb-3 p-3">
-                    <h5>All Teams</h5>
-                    ${teams.map(team => `
-                        <div class="mb-2">
-                            <label for="team${team.id}" class="form-label">Team ${team.id}:</label>
-                            <input type="password" class="form-control d-inline-block w-auto" id="team${team.id}" maxlength="1" onchange="setAnswer(${team.id}, this.value)">
-                            <span id="result${team.id}" class="result-ball"></span>
+            let teamsHtml = '<div class="card mb-3 p-3"><h5>All Teams</h5>';
+            for (let i = 0; i < teams.length; i += 2) {
+                teamsHtml += `
+                    <div class="team-pair">
+                        <div class="team-input">
+                            <label for="team${teams[i].id}" class="form-label">Team ${teams[i].id}:</label>
+                            <input type="password" class="form-control" id="team${teams[i].id}" maxlength="1" onchange="setAnswer(${teams[i].id}, this.value)">
+                            <span id="result${teams[i].id}" class="result-ball"></span>
                         </div>
-                    `).join('')}
-                </div>
-            `;
+                        <div class="team-input">
+                            <label for="team${teams[i+1].id}" class="form-label">Team ${teams[i+1].id}:</label>
+                            <input type="password" class="form-control" id="team${teams[i+1].id}" maxlength="1" onchange="setAnswer(${teams[i+1].id}, this.value)">
+                            <span id="result${teams[i+1].id}" class="result-ball"></span>
+                        </div>
+                    </div>
+                `;
+            }
+            teamsHtml += '</div>';
+            teamsDiv.innerHTML = teamsHtml;
         }
 
         function setAnswer(teamId, value) {
@@ -148,12 +172,19 @@
             document.getElementById('revealButton').style.display = 'block';
             document.getElementById('nextRoundButton').style.display = 'none';
             updateScoreboard();
+            document.getElementById('team1').focus();
         }
 
         function updateScoreboard() {
             const scoreboard = document.getElementById('scoreboard');
+            let roundInfo = `Round ${currentRound} / ${totalRounds}`;
+            if (currentRound === 2 || currentRound === 5) {
+                roundInfo += ' - Special Round: Scores Doubled';
+            } else if (currentRound === 9) {
+                roundInfo += ' - Special Round: Scores Squared';
+            }
             scoreboard.innerHTML = `
-                <h5 class="card-title">Round ${currentRound} / ${totalRounds}</h5>
+                <h5 class="card-title">${roundInfo}</h5>
                 ${teams.map(team => `<p class="mb-2">Team ${team.id}: <span class="score-change">${team.score}</span> points</p>`).join('')}
             `;
             setTimeout(() => {
