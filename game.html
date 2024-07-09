@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Green and Orange Ball Game</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .result-ball {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-left: 10px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .score-change {
+            animation: pulse 0.5s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Green and Orange Ball Game</h1>
+        <div id="setup" class="card p-4 mb-4">
+            <h5>Game Setup</h5>
+            <div class="mb-3">
+                <label for="numTeams" class="form-label">Number of teams (must be even):</label>
+                <input type="number" class="form-control" id="numTeams" min="2" step="2" value="4">
+            </div>
+            <p>Enter 1 for Green, 0 for Orange</p>
+            <button class="btn btn-primary" onclick="setupGame()">Start Game</button>
+        </div>
+        <div id="gameArea" style="display:none;">
+            <div id="teams" class="mb-4"></div>
+            <button id="revealButton" class="btn btn-success mb-3" onclick="revealAnswers()">Reveal Answers</button>
+            <button id="nextRoundButton" class="btn btn-primary mb-3" onclick="nextRound()" style="display:none;">Next Round</button>
+            <div id="scoreboard" class="card p-3 mb-4"></div>
+            <div class="card p-3">
+                <h5>Game Rules:</h5>
+                <ul>
+                    <li>0 = Orange Ball</li>
+                    <li>1 = Green Ball</li>
+                    <li>Green vs Green: Both teams get 5 points</li>
+                    <li>Green vs Orange: Green gets 10 points, Orange loses 10 points</li>
+                    <li>Orange vs Orange: Both teams lose 5 points</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        let teams = [];
+        let currentRound = 1;
+        const totalRounds = 10;
+
+        function setupGame() {
+            const numTeams = parseInt(document.getElementById('numTeams').value);
+            if (numTeams < 2 || numTeams % 2 !== 0) {
+                alert('Please enter an even number of teams (at least 2).');
+                return;
+            }
+            teams = Array(numTeams).fill().map((_, i) => ({ id: i + 1, score: 0, answer: null }));
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('gameArea').style.display = 'block';
+            renderTeams();
+            updateScoreboard();
+        }
+
+        function renderTeams() {
+            const teamsDiv = document.getElementById('teams');
+            teamsDiv.innerHTML = `
+                <div class="card mb-3 p-3">
+                    <h5>All Teams</h5>
+                    ${teams.map(team => `
+                        <div class="mb-2">
+                            <label for="team${team.id}" class="form-label">Team ${team.id}:</label>
+                            <input type="password" class="form-control d-inline-block w-auto" id="team${team.id}" maxlength="1" onchange="setAnswer(${team.id}, this.value)">
+                            <span id="result${team.id}" class="result-ball"></span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function setAnswer(teamId, value) {
+            const team = teams.find(t => t.id === teamId);
+            team.answer = value === '1' ? 1 : 0;
+        }
+
+        function revealAnswers() {
+            if (teams.some(team => team.answer === null)) {
+                alert('All teams must enter an answer.');
+                return;
+            }
+            
+            for (let i = 0; i < teams.length; i += 2) {
+                const team1 = teams[i];
+                const team2 = teams[i + 1];
+                
+                document.getElementById(`result${team1.id}`).style.backgroundColor = team1.answer === 1 ? 'green' : 'orange';
+                document.getElementById(`result${team1.id}`).style.opacity = '1';
+                document.getElementById(`result${team2.id}`).style.backgroundColor = team2.answer === 1 ? 'green' : 'orange';
+                document.getElementById(`result${team2.id}`).style.opacity = '1';
+                
+                if (team1.answer === 1 && team2.answer === 1) {
+                    team1.score += 5;
+                    team2.score += 5;
+                } else if (team1.answer === 1 && team2.answer === 0) {
+                    team1.score += 10;
+                    team2.score -= 10;
+                } else if (team1.answer === 0 && team2.answer === 1) {
+                    team1.score -= 10;
+                    team2.score += 10;
+                } else if (team1.answer === 0 && team2.answer === 0) {
+                    team1.score -= 5;
+                    team2.score -= 5;
+                }
+            }
+            
+            if ([2, 5].includes(currentRound)) {
+                teams.forEach(team => team.score *= 2);
+            } else if (currentRound === 9) {
+                teams.forEach(team => team.score = Math.pow(team.score, 2));
+            }
+            
+            updateScoreboard();
+            document.getElementById('revealButton').style.display = 'none';
+            document.getElementById('nextRoundButton').style.display = 'block';
+        }
+
+        function nextRound() {
+            currentRound++;
+            if (currentRound > totalRounds) {
+                alert('Game Over!');
+                return;
+            }
+            teams.forEach(team => {
+                team.answer = null;
+                document.getElementById(`team${team.id}`).value = '';
+                document.getElementById(`result${team.id}`).style.opacity = '0';
+            });
+            document.getElementById('revealButton').style.display = 'block';
+            document.getElementById('nextRoundButton').style.display = 'none';
+            updateScoreboard();
+        }
+
+        function updateScoreboard() {
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = `
+                <h5 class="card-title">Round ${currentRound} / ${totalRounds}</h5>
+                ${teams.map(team => `<p class="mb-2">Team ${team.id}: <span class="score-change">${team.score}</span> points</p>`).join('')}
+            `;
+            setTimeout(() => {
+                document.querySelectorAll('.score-change').forEach(el => el.classList.remove('score-change'));
+            }, 500);
+        }
+    </script>
+</body>
+</html>
