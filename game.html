@@ -146,25 +146,25 @@
                 document.getElementById(`result${team2.id}`).style.backgroundColor = team2.answer === 1 ? 'green' : 'orange';
                 document.getElementById(`result${team2.id}`).style.opacity = '1';
                 
+                let turnScore;
                 if (team1.answer === 1 && team2.answer === 1) {
-                    team1.score += 5;
-                    team2.score += 5;
+                    turnScore = 5;
                 } else if (team1.answer === 1 && team2.answer === 0) {
-                    team1.score += 10;
-                    team2.score -= 10;
+                    turnScore = 10;
                 } else if (team1.answer === 0 && team2.answer === 1) {
-                    team1.score -= 10;
-                    team2.score += 10;
+                    turnScore = -10;
                 } else if (team1.answer === 0 && team2.answer === 0) {
-                    team1.score -= 5;
-                    team2.score -= 5;
+                    turnScore = -5;
                 }
-            }
-            
-            if ([2, 5].includes(currentRound)) {
-                teams.forEach(team => team.score *= 2);
-            } else if (currentRound === 9) {
-                teams.forEach(team => team.score = Math.floor(Math.sqrt(Math.abs(team.score)) * Math.sign(team.score)));
+        
+                if (currentRound === 2 || currentRound === 5) {
+                    turnScore *= 2;
+                } else if (currentRound === 9) {
+                    turnScore = Math.pow(turnScore, 2) * Math.sign(turnScore);
+                }
+        
+                team1.score += turnScore;
+                team2.score += (team1.answer === team2.answer) ? turnScore : -turnScore;
             }
             
             updateScoreboard();
