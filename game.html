@@ -176,14 +176,13 @@
             currentRound++;
             if (currentRound > totalRounds) {
                 const totalScore = teams.reduce((sum, team) => sum + team.score, 0);    
-                // Calculate theoretical max score if all teams always chose green
                 let theoreticalMax = 0;
                 for (let round = 1; round <= totalRounds; round++) {
-                    let roundScore = teams.length / 2 * 5; // Base score for each round (all teams get 5 points)
+                    let roundScore = teams.length * 5; // Each team gets 5 points for choosing green
                     if (round === 2 || round === 5) {
                         roundScore *= 2; // Double score for rounds 2 and 5
                     } else if (round === 9) {
-                        roundScore = Math.pow(roundScore, 2); // Square score for round 9
+                        roundScore = Math.pow(roundScore / teams.length, 2) * teams.length; // Square score for round 9
                     }
                     theoreticalMax += roundScore;
                 }
