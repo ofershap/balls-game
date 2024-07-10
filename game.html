@@ -164,7 +164,7 @@
             if ([2, 5].includes(currentRound)) {
                 teams.forEach(team => team.score *= 2);
             } else if (currentRound === 9) {
-                teams.forEach(team => team.score = Math.pow(team.score, 2));
+                teams.forEach(team => team.score = Math.floor(Math.sqrt(Math.abs(team.score)) * Math.sign(team.score)));
             }
             
             updateScoreboard();
@@ -175,7 +175,14 @@
         function nextRound() {
             currentRound++;
             if (currentRound > totalRounds) {
-                alert('Game Over!');
+                const totalScore = teams.reduce((sum, team) => sum + team.score, 0);    
+                // Calculate theoretical max score if all teams always chose green
+                let theoreticalMax = teams.length / 2 * 5 * totalRounds; // Base score
+                theoreticalMax *= 2; // Double score for rounds 2 and 5
+                theoreticalMax = theoreticalMax * 2 + Math.pow(teams.length / 2 * 5, 2); // Square score for round 9
+                alert(`Game Over!
+                        Total Score: ${totalScore}
+                        Theoretical max score (if all teams always chose green): ${theoreticalMax}`);
                 return;
             }
             teams.forEach(team => {
